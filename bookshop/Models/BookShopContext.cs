@@ -8,6 +8,6 @@ namespace bookshop.Models
 
         }
 
-        public DbSet<Book> Books { get; set; } = null!;
+        public DbSet<Book> Book { get; set; } = null!;
     }
 }

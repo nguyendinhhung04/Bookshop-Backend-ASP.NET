@@ -10,16 +10,6 @@ namespace bookshop
         {
             var group = routes.MapGroup("/books");
 
-            group.MapGet("/getbooks", ([FromServices] IDAO<Book> bookDAO) =>
-            {
-                return Results.Ok(bookDAO.GetAll().ToArray());
-            });
-
-            group.MapGet("/gettemp", ([FromServices] IDAO<Book> bookDAO) =>
-            {
-                return Results.Ok(bookDAO.GetTempData());
-            });
-
             return group;
         }
     }

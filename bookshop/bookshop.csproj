@@ -20,6 +20,13 @@
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.9.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="BusinessLayer\" />
+    <Folder Include="CommonLib\" />
+    <Folder Include="DataAccessLayer\" />
+    <Folder Include="ObjectInterface\" />
+  </ItemGroup>
+
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
 </Project>

@@ -3,7 +3,7 @@ using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Data;
 
-namespace bookshop.Models
+namespace bookshop.Models.DAO
 {
     public class DBConnection
     {
