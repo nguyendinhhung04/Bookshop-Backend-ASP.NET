@@ -1,8 +1,11 @@
-using bookshop.Models;
+using bookshop.DataAccessLayer;
+using bookshop.DataAccessLayer.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Oracle.ManagedDataAccess.Client;
 using static System.Reflection.Metadata.BlobBuilder;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using bookshop.DataAccessLayer.Models.DAO;
 
 
 namespace bookshop
@@ -16,70 +19,98 @@ namespace bookshop
             var MyAllowSpecificOrigins = "MyAllowSpecificOrigins";
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers().AddJsonOptions(options =>
+            {
+                // PascalCase thay vì camelCase
+                options.JsonSerializerOptions.PropertyNamingPolicy = null;
+
+                // Ignore null
+                options.JsonSerializerOptions.DefaultIgnoreCondition =
+                    System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+
+                // Case-insensitive khi parse JSON (m?c ??nh true)
+                options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+            });
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme,
+                    options =>
+                    {
+                        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                        {
+                            ValidateIssuer = true,
+                            ValidateAudience = true,
+                            ValidateLifetime = true,
+                            ValidateIssuerSigningKey = true,
+                            ValidIssuer = builder.Configuration["JWT:Issuer"],
+                            ValidAudience = builder.Configuration["JWT:Audience"],
+                            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["JWT:SecretKey"]))
+                        };
+
+                        options.Events = new JwtBearerEvents
+                        {
+                            OnAuthenticationFailed = context =>
+                            {
+                                Console.WriteLine("OnAuthenticationFailed: " + context.Exception.Message);
+                                return System.Threading.Tasks.Task.CompletedTask;
+                            }
+                        };
+                    });
 
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy(name: MyAllowSpecificOrigins,
                                   policy =>
                                   {
-                                      policy.WithOrigins("*").AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                                      policy.WithOrigins("*").AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader() ;
                                   });
             });
 
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
-            //builder.Services.AddDbContext<BookShopContext>(opt =>opt.UseOracle(builder.Configuration.GetConnectionString("bookshopContext")));
-            builder.Services.AddDbContext<BookShopContext>(opt =>
-            {
-                opt.UseInMemoryDatabase("BookShopTempDB");
-                opt.EnableSensitiveDataLogging(); // Add this line
-            });
+            //Add ODP Service
+            builder.Services.AddScoped<IDAO<Book>, BookDAO>();
+            builder.Services.AddScoped<DBConnection>();
 
-            //Dont use DAO --> Use Entity Framework
-            //builder.Services.AddScoped<DBConnection>();
-            //builder.Services.AddScoped<Models.DAO.IDAO<Book>, Models.DAO.BookDAO>();
-
-            //builder.Services.AddSingleton<TempData>();
+            // //Use DB Context
+            builder.Services.AddDbContext<BookShopContext>(opt =>opt.UseOracle(builder.Configuration.GetConnectionString("bookshopContext")));
+            
+            // //Use In Memory Database
+            //builder.Services.AddDbContext<BookShopContext>(opt =>
+            //{
+            //    opt.UseInMemoryDatabase("BookShopTempDB");
+            //    opt.EnableSensitiveDataLogging(); // Add this line
+            //});
 
 
             var app = builder.Build();
-            using (var scope = app.Services.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<BookShopContext>();
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var db = scope.ServiceProvider.GetRequiredService<BookShopContext>();
 
-                if (!db.Book.Any())
-                {
-                    //Book[] books = new Book[10];
-                    //for (int i = 0; i < 10; i++)
-                    //{
-                    //    books[i] = new Book(
-                    //        i,
-                    //        "Book " + i.ToString(),
-                    //        i * 50,
-                    //        i * 7 % 2
-                    //        );
-                    //}
-                    db.Book.AddRange(
-                        new Book(
-                                1,
-                                "Book " + 1.ToString(),
-                                1 * 50,
-                                1 * 7 % 2
-                                ),
-                        new Book(
-                                2,
-                                "Book " + 2.ToString(),
-                                2 * 50,
-                                2 * 7 % 2
-                                )
+            //    if (!db.Book.Any())
+            //    {
+            //        db.Book.AddRange(
+            //            new Book(
+            //                    1,
+            //                    "Book " + 1.ToString(),
+            //                    1 * 50,
+            //                    1 * 7 % 2
+            //                    ),
+            //            new Book(
+            //                    2,
+            //                    "Book " + 2.ToString(),
+            //                    2 * 50,
+            //                    2 * 7 % 2
+            //                    )
 
-                        );
+            //            );
 
-                    db.SaveChanges();
-                }
-            }
+            //        db.SaveChanges();
+            //    }
+            //}
+
 
 
             // Configure the HTTP request pipeline.
@@ -93,9 +124,9 @@ namespace bookshop
 
             app.UseCors(MyAllowSpecificOrigins);
 
+
             app.UseAuthorization();
 
-            app.MapBookEndpoints();
             app.MapControllers();
 
             app.Run();

@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-namespace bookshop.Models
+﻿using bookshop.DataAccessLayer.Models;
+using Microsoft.EntityFrameworkCore;
+namespace bookshop.DataAccessLayer
 {
     public class BookShopContext : DbContext
     {

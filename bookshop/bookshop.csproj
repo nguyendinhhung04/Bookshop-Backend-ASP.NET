@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.66" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
@@ -23,7 +25,7 @@
   <ItemGroup>
     <Folder Include="BusinessLayer\" />
     <Folder Include="CommonLib\" />
-    <Folder Include="DataAccessLayer\" />
+    <Folder Include="Secirity\" />
     <Folder Include="ObjectInterface\" />
   </ItemGroup>
 
