@@ -28,20 +28,23 @@ namespace bookshop.DataAccessLayer.Models.DAO
                 //    commandTimeout: 30
                 //);
                 var cmd = "SELECT * FROM " + TableNameDictionary.TableNames[typeof(T).Name.ToString()];
+                var result = new List<T>();
                 try
                 {
-                    var result = (await connection.con.QueryAsync<T>(cmd)).ToList()  ;
-
-                    return result;
+                    result = (await connection.con.QueryAsync<T>(cmd)).ToList()  ;
                 }
                 catch (Exception ex) {
                     Console.WriteLine(ex.InnerException.Message);
                 }
+                return result;
 
-                
             }
         }
 
+        public async Task<bool> Add(T enity) //Viet Add cho tat ca enity (Viet sau)
+        {
+            return true;
+        }
         
     }
 }

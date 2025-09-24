@@ -26,7 +26,7 @@ namespace bookshop.Controllers
 
         [HttpGet("/getallbooks")]
         [EnableCors("MyAllowSpecificOrigins")]
-        public List<Book> GetAllBooks()
+        public Task<List<Book>> GetAllBooks()
         {
             //return _context.Book.ToList<Book>();
             return bookDAO.GetAll();
@@ -42,25 +42,17 @@ namespace bookshop.Controllers
 
         [HttpPost("/addbook")]
         [EnableCors("MyAllowSpecificOrigins")]
-        public async Task<IActionResult> AddBook([FromBody] Book book)
+        public async Task<bool>? AddBook([FromBody] Book book)
         {
-            //Use Sequence 
-            //string  id = Guid.NewGuid().ToString();
-
-            int id = (new Random()).Next(0, 999);
-            while ( await _context.Book.FindAsync(id) != null )
-            {
-                id = (new Random()).Next(0, 999);
-            }
-
-            book.ID = id;
 
             //handle error , use try catch
-            var result = await _context.Book.AddAsync(book);
-
-            await _context.SaveChangesAsync();
-            return Ok("Saved new book");
+            //var result = await _context.Book.AddAsync(book);
+            //await _context.SaveChangesAsync();
+            
+            return await bookDAO.Add(book);
         }
+
+
 
         [HttpDelete("/deletebook/{id}")]
         [EnableCors("MyAllowSpecificOrigins")]
