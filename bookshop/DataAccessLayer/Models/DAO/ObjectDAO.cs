@@ -13,7 +13,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
             this.connection = connection;
         }
 
-        public List<T> GetAll()
+        public async Task<List<T>> GetAll()
         {
             using (var conn = connection.con)
             {
@@ -28,8 +28,17 @@ namespace bookshop.DataAccessLayer.Models.DAO
                 //    commandTimeout: 30
                 //);
                 var cmd = "SELECT * FROM " + TableNameDictionary.TableNames[typeof(T).Name.ToString()];
-                var result =  connection.con.Query<T>(cmd).ToList();
-                return result;
+                try
+                {
+                    var result = (await connection.con.QueryAsync<T>(cmd)).ToList()  ;
+
+                    return result;
+                }
+                catch (Exception ex) {
+                    Console.WriteLine(ex.InnerException.Message);
+                }
+
+                
             }
         }
 

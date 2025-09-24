@@ -2,6 +2,6 @@
 {
     public interface IDAO<T> where T : class
     {
-        List<T> GetAll();
+        Task<List<T>> GetAll();
     }
 }
