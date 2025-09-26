@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace bookshop.DataAccessLayer.Models
 {
-    [Table("BOOK")]
+    [Table("BOOKSHOP_BOOK")]
     public class Book
     {
 

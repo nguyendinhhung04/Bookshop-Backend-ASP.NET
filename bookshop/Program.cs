@@ -70,8 +70,10 @@ namespace bookshop
             builder.Services.AddOpenApi();
 
             //Add ODP Service
-            builder.Services.AddScoped<IDAO<Book>, BookDAO>();
             builder.Services.AddScoped<DBConnection>();
+            builder.Services.AddScoped<BookDAO>();
+            builder.Services.AddScoped<CategoryDAO>();
+            
 
             // //Use DB Context
             builder.Services.AddDbContext<BookShopContext>(opt =>opt.UseOracle(builder.Configuration.GetConnectionString("bookshopContext")));

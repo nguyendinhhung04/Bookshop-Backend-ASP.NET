@@ -1,8 +1,8 @@
 ﻿namespace bookshop.DataAccessLayer.Models.DAO
 {
-    public interface IDAO<T> where T : class
+    public interface IDAO
     {
-        Task<List<T>> GetAll();
-        Task<bool> Add(T entity);
+        //Task<List<T>> GetAll<T>();
+        //Task<bool> Add<T>(T entity);
     }
 }

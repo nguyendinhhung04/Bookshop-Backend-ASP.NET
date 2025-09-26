@@ -2,7 +2,7 @@
 
 namespace bookshop.DataAccessLayer.Models
 {
-    [Table("CATEGORY")]
+    [Table("BOOKSHOP_CATEGORY")]
     public class Category
     {
         public int ID { get; set; }

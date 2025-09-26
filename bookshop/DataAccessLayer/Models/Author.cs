@@ -2,7 +2,7 @@
 
 namespace bookshop.DataAccessLayer.Models
 {
-    [Table("AUTHOR")]
+    [Table("BOOKSHOP_AUTHOR")]
     public class Author
     {
 

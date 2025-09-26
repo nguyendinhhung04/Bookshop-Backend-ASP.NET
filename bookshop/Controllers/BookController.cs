@@ -1,6 +1,7 @@
 ﻿using bookshop.DataAccessLayer;
 using bookshop.DataAccessLayer.Models;
 using bookshop.DataAccessLayer.Models.DAO;
+using bookshop.DataAccessLayer.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -15,9 +16,9 @@ namespace bookshop.Controllers
 
         private readonly ILogger<BookController> _logger;
         private BookShopContext _context;
-        private IDAO<Book> bookDAO;
+        private BookDAO bookDAO;
 
-        public BookController(ILogger<BookController> logger, BookShopContext context, IDAO<Book> bookDAO)
+        public BookController(ILogger<BookController> logger, BookShopContext context, BookDAO bookDAO)
         {
             _logger = logger;
             _context = context;
@@ -26,18 +27,17 @@ namespace bookshop.Controllers
 
         [HttpGet("/getallbooks")]
         [EnableCors("MyAllowSpecificOrigins")]
-        public Task<List<Book>> GetAllBooks()
+        public async Task<List<BookListData>> GetAllBooks()
         {
-            //return _context.Book.ToList<Book>();
-            return bookDAO.GetAll();
-
+            return await bookDAO.GetAll();
         }
 
         [HttpGet("/getbook/{id}")]
         [EnableCors("MyAllowSpecificOrigins")]
-        public Book? GetBook([FromRoute] int id)
+        public async Task<BookDetail> GetBook([FromRoute] int id)
         {
-            return _context.Book.Find(id);
+            //return _context.Book.Find(id);
+            return await bookDAO.GetOneBook(id);
         }
 
         [HttpPost("/addbook")]

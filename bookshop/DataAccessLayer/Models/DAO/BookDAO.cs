@@ -1,4 +1,5 @@
 ﻿using bookshop.DataAccessLayer.Models;
+using bookshop.DataAccessLayer.Models.DTO;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using NuGet.Protocol.Plugins;
@@ -10,7 +11,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 namespace bookshop.DataAccessLayer.Models.DAO
 {
 
-    public class BookDAO : IDAO<Book>
+    public class BookDAO : IDAO
     {
         private readonly DBConnection connection;
 
@@ -75,24 +76,6 @@ namespace bookshop.DataAccessLayer.Models.DAO
         {
             using (var conn = connection.con)
             {
-
-                //using (OracleCommand command = new OracleCommand("ADD_BOOK", conn))
-                //{
-                //    command.CommandType = CommandType.StoredProcedure;
-
-                //    command.Parameters.Add("p_name", OracleDbType.Varchar2, "some_value", ParameterDirection.Input);
-                //    command.Parameters.Add("p_numPage", OracleDbType.Int64, "some_value", ParameterDirection.Input);
-                //    command.Parameters.Add("p_onSale", OracleDbType.Varchar2, "some_value", ParameterDirection.Input);
-                //    command.Parameters.Add("p_price", OracleDbType.Varchar2, "some_value", ParameterDirection.Input);
-                //    command.Parameters.Add("p_discount", OracleDbType.Varchar2, "some_value", ParameterDirection.Input);
-                //    command.Parameters.Add("p_description", OracleDbType.Varchar2, "some_value", ParameterDirection.Input);
-                //    command.Parameters.Add("p_coverURL", OracleDbType.Varchar2, "some_value", ParameterDirection.Input);
-                //    command.Parameters.Add("p_category", OracleDbType.Varchar2, "some_value", ParameterDirection.Input);
-                //    command.Parameters.Add("p_publishDate", OracleDbType.Varchar2, "some_value", ParameterDirection.Input);
-                    
-                //    command.Parameters.Add("p_output_param", OracleDbType.Int32, ParameterDirection.Output);
-                //}
-
                 var parameters = new DynamicParameters();
                 parameters.Add("p_name", book.NAME);
                 parameters.Add("p_numPage", book.NUMBER_OF_PAGE);
@@ -124,23 +107,47 @@ namespace bookshop.DataAccessLayer.Models.DAO
             
         }
 
-        public async Task<List<Book>> GetAll()
+        public async Task<List<BookListData>> GetAll()
         {
             using (var conn = connection.con)
             {
-                var cmd = "SELECT * FROM BOOK ";
-                List<Book> result = null;
+                var cmd = "SELECT " +
+                    "b.ID,b.NAME, c.NAME AS CATEGORY, b.ON_SALE, b.PRICE" +
+                    " FROM BOOKSHOP_BOOK b INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID";
+                List<BookListData> result = null;
                 try
                 {
-                    result = (await connection.con.QueryAsync<Book>(cmd)).ToList();
+                    result = (await connection.con.QueryAsync<BookListData>(cmd)).ToList();
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.InnerException.Message);
+                    Console.WriteLine("Can not Query all book");
                 }
                 return result;
             }
         }
 
+        public async Task<BookDetail> GetOneBook(int id)
+        {
+            using (var conn = connection.con)
+            {
+                var cmd = "SELECT " +
+                    "b.ID,b.NAME, b.NUMBER_OF_PAGE, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, c.NAME AS CATEGORY, b.PUBLISH_DATE" +
+                    " FROM BOOKSHOP_BOOK b INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID" +
+                    " WHERE b.ID = :id";
+                BookDetail result = null;
+                try
+                {
+                    result = (await connection.con.QueryAsync<BookDetail>(cmd, new { id = id })).FirstOrDefault();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Can not Query book with id = " + id);
+                }
+                return result;
+            }
+        }
     }
+
+    
 }

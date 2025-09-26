@@ -4,10 +4,10 @@
     {
         public static Dictionary<string, string> TableNames = new Dictionary<string, string>
         {
-            { "Book", "BOOK" },
-            { "Author", "AUTHOR" },
-            { "Category", "CATEGORY" },
-            { "Compose", "COMPOSE" }
+            { "Book", "BOOKSHOP_BOOK" },
+            { "Author", "BOOKSHOP_AUTHOR" },
+            { "Category", "BOOKSHOP_CATEGORY" },
+            { "Compose", "BOOKSHOP_COMPOSE" }
         };
     }
 }

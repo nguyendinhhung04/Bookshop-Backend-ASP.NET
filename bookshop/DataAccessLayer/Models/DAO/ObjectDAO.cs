@@ -4,7 +4,7 @@ using System.Data;
 
 namespace bookshop.DataAccessLayer.Models.DAO
 {
-    public class ObjectDAO<T> : IDAO<T> where T : class
+    public class ObjectDAO<T> : IDAO
     {
         protected readonly DBConnection connection;
 
