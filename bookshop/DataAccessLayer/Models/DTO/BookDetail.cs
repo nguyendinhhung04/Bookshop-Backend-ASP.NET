@@ -4,6 +4,9 @@ namespace bookshop.DataAccessLayer.Models.DTO
 {
     public class BookDetail
     {
+        public BookDetail()
+        {
+        }
 
         public int? ID { get; set; } // Primary key property
         public String NAME { get; set; }
@@ -13,10 +16,8 @@ namespace bookshop.DataAccessLayer.Models.DTO
         public float DISCOUNT { get; set; }
         public String DESCRIPTION { get; set; }
         public String COVER_URL { get; set; }
-
-        [ForeignKey("Category")]
         public String CATEGORY { get; set; }
         public DateTime PUBLISH_DATE { get; set; }
-
+        public String? AUTHORS { get; set; }
     }
 }

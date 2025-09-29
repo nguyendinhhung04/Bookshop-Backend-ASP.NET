@@ -73,17 +73,17 @@ namespace bookshop
             builder.Services.AddScoped<DBConnection>();
             builder.Services.AddScoped<BookDAO>();
             builder.Services.AddScoped<CategoryDAO>();
-            
+
 
             // //Use DB Context
-            builder.Services.AddDbContext<BookShopContext>(opt =>opt.UseOracle(builder.Configuration.GetConnectionString("bookshopContext")));
-            
-            // //Use In Memory Database
-            //builder.Services.AddDbContext<BookShopContext>(opt =>
-            //{
-            //    opt.UseInMemoryDatabase("BookShopTempDB");
-            //    opt.EnableSensitiveDataLogging(); // Add this line
-            //});
+            //builder.Services.AddDbContext<BookShopContext>(opt =>opt.UseOracle(builder.Configuration.GetConnectionString("bookshopContext")));
+
+            //Use In Memory Database
+            builder.Services.AddDbContext<BookShopContext>(opt =>
+            {
+                opt.UseInMemoryDatabase("BookShopTempDB");
+                opt.EnableSensitiveDataLogging(); // Add this line
+            });
 
 
             var app = builder.Build();
@@ -91,22 +91,19 @@ namespace bookshop
             //{
             //    var db = scope.ServiceProvider.GetRequiredService<BookShopContext>();
 
+            //    if (!db.Category.Any())
+            //    {
+            //        db.Category.AddRangeAsync(
+            //            GenerateInMemoryDB.Books
+            //            );
+
+            //        db.SaveChanges();
+            //    }
+
             //    if (!db.Book.Any())
             //    {
-            //        db.Book.AddRange(
-            //            new Book(
-            //                    1,
-            //                    "Book " + 1.ToString(),
-            //                    1 * 50,
-            //                    1 * 7 % 2
-            //                    ),
-            //            new Book(
-            //                    2,
-            //                    "Book " + 2.ToString(),
-            //                    2 * 50,
-            //                    2 * 7 % 2
-            //                    )
-
+            //        db.Book.AddRangeAsync(
+                       
             //            );
 
             //        db.SaveChanges();

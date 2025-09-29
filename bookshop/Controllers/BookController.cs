@@ -58,6 +58,11 @@ namespace bookshop.Controllers
         [EnableCors("MyAllowSpecificOrigins")]
         public async Task<IActionResult> DeleteBook([FromRoute] int id )
         {
+            if (id == null || id <= 0)
+            {
+                return BadRequest("Book Id is required.");
+            }
+
             var book = await _context.Book.FindAsync(id);
             if (book == null)
             {
@@ -71,23 +76,14 @@ namespace bookshop.Controllers
 
         [HttpPut("/updatebook")]
         [EnableCors("MyAllowSpecificOrigins")]
-        public async Task<IActionResult> UpdateBook([FromBody] Book updatedBook)
+        public async Task<IActionResult> UpdateBook([FromBody] UpdateBook updatedBook)
         {
-            if (updatedBook.ID == null)
+            if (updatedBook == null)
             {
                 return BadRequest("Book Id is required.");
             }
-            var book = await _context.Book.FindAsync(updatedBook.ID);
-            if (book == null)
-            {
-                return NotFound($"Book with id {updatedBook.ID} not found.");
-            }
-            // Update properties
-            book.NAME = updatedBook.NAME;
-            book.NUMBER_OF_PAGE = updatedBook.NUMBER_OF_PAGE;
-            book.ON_SALE = updatedBook.ON_SALE;
 
-            await _context.SaveChangesAsync();
+            var result = await bookDAO.UpdateBook(updatedBook);
             return Ok($"Book with id {updatedBook.ID} updated successfully.");
         }
 

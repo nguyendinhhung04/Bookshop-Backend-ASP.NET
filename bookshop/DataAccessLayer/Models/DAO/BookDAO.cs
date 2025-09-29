@@ -131,20 +131,82 @@ namespace bookshop.DataAccessLayer.Models.DAO
         {
             using (var conn = connection.con)
             {
-                var cmd = "SELECT " +
-                    "b.ID,b.NAME, b.NUMBER_OF_PAGE, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, c.NAME AS CATEGORY, b.PUBLISH_DATE" +
-                    " FROM BOOKSHOP_BOOK b INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID" +
-                    " WHERE b.ID = :id";
+
+                String cmd = "SELECT " +
+                    "b.ID, b.NAME, b.NUMBER_OF_PAGE, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, " +
+                    "c.NAME AS CATEGORY, " +
+                    "b.PUBLISH_DATE, " +
+                    "LISTAGG(a.NAME, ', ') WITHIN GROUP (ORDER BY a.NAME) AS AUTHORS " +
+                    "FROM BOOKSHOP_BOOK b " +
+                    "INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID " +
+                    "LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID " +
+                    "LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID " +
+                    "WHERE b.ID = :id " +
+                    "GROUP BY b.ID, b.NAME, b.NUMBER_OF_PAGE, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, c.NAME, b.PUBLISH_DATE";
+                //thừa dấu chấm phẩy ở cuối câu lệnh SQL
+
                 BookDetail result = null;
                 try
                 {
                     result = (await connection.con.QueryAsync<BookDetail>(cmd, new { id = id })).FirstOrDefault();
+                    //await conn.ExecuteAsync(cmd);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine("Can not Query book with id = " + id);
                 }
                 return result;
+            }
+        }
+
+        public async Task<bool> UpdateBook(UpdateBook updateBook)
+        {
+            using (var conn = connection.con)
+            {
+                String cmd = "UPDATE BOOK SET " +
+                    "NAME = :name, DESCRIPTION = :des, ON_SALE = :onsale, PRICE = :price, DISCOUNT = :discount" +
+                    "WHERE ID = :id";
+                bool result = false;
+                try
+                {
+                    var parameters = new
+                    {
+                        id = updateBook.ID,
+                        name = updateBook.NAME,
+                        des = updateBook.DESCRIPTION,
+                        onsale = updateBook.ON_SALE,
+                        price = updateBook.PRICE,
+                        discount = updateBook.DISCOUNT
+                    };
+
+                    int rowsAffected = await conn.ExecuteAsync(cmd, parameters);
+                    return rowsAffected > 0; // true nếu có ít nhất 1 row được update
+
+                }
+                catch(Exception e)
+                {
+                    Console.WriteLine("Can not update book");
+                    return false;
+                }
+            }
+        }
+
+        public async Task<bool> Delete(int id)
+        {
+            using (var conn = connection.con)
+            {
+                String cmd = "DELETE FROM BOOK WHERE ID = :id";
+                bool result = false;
+                try
+                {
+                    int rowsAffected = await conn.ExecuteAsync(cmd, new { id = id });
+                    return rowsAffected > 0; // true nếu có ít nhất 1 row bị xóa
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Can not delete book");
+                    return false;
+                }
             }
         }
     }
