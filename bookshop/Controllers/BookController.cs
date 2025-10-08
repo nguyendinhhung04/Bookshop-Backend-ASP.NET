@@ -25,11 +25,11 @@ namespace bookshop.Controllers
             this.bookDAO = bookDAO;
         }
 
-        [HttpGet("/getallbooks")]
+        [HttpGet("/getallbooks/")]
         [EnableCors("MyAllowSpecificOrigins")]
-        public async Task<List<BookListData>> GetAllBooks()
+        public async Task<List<BookListData>> GetAllBooks([FromQuery] String? name, [FromQuery] int page)
         {
-            return await bookDAO.GetAll();
+            return await bookDAO.FindBookByName(name, page);
         }
 
         [HttpGet("/getbook/{id}")]
@@ -42,7 +42,7 @@ namespace bookshop.Controllers
 
         [HttpPost("/addbook")]
         [EnableCors("MyAllowSpecificOrigins")]
-        public async Task<bool>? AddBook([FromBody] Book book)
+        public async Task<bool>? AddBook([FromBody] AddedBook book)
         {
 
             //handle error , use try catch
@@ -76,15 +76,27 @@ namespace bookshop.Controllers
 
         [HttpPut("/updatebook")]
         [EnableCors("MyAllowSpecificOrigins")]
-        public async Task<IActionResult> UpdateBook([FromBody] UpdateBook updatedBook)
+        public async Task<bool> UpdateBook([FromBody] UpdateBook updatedBook)
         {
             if (updatedBook == null)
             {
-                return BadRequest("Book Id is required.");
+                return false;
             }
 
             var result = await bookDAO.UpdateBook(updatedBook);
-            return Ok($"Book with id {updatedBook.ID} updated successfully.");
+            return result;
+        }
+
+        [HttpPost("/customSearch")]
+        [EnableCors("MyAllowSpecificOrigins")]
+        public async Task<List<BookListData>> CustomSearch([FromBody] SearchBook searchBook)
+        {
+            if (searchBook == null)
+            {
+                return null;
+            }
+            var result = await bookDAO.CustomSearchBook(searchBook);
+            return result;
         }
 
     }

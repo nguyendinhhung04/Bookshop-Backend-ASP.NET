@@ -19,7 +19,6 @@ namespace bookshop.DataAccessLayer.Models
 
         public Book(int? iD, 
             string nAME, 
-            int nUMBER_OF_PAGE, 
             int oN_SALE, 
             float pRICE, 
             float dISCOUNT, 
@@ -30,7 +29,6 @@ namespace bookshop.DataAccessLayer.Models
         {
             ID = iD;
             NAME = nAME;
-            NUMBER_OF_PAGE = nUMBER_OF_PAGE;
             ON_SALE = oN_SALE;
             PRICE = pRICE;
             DISCOUNT = dISCOUNT;
@@ -43,7 +41,6 @@ namespace bookshop.DataAccessLayer.Models
 
         public int? ID { get;  set; } // Primary key property
         public String NAME { get;  set; }
-        public int NUMBER_OF_PAGE { get;  set; }
         public int ON_SALE { get;  set; }
         public float PRICE { get; set; }
         public float DISCOUNT { get; set; }

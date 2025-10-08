@@ -2,21 +2,20 @@
 
 namespace bookshop.DataAccessLayer.Models.DTO
 {
-    public class BookDetail
+    public class AddedBook
     {
-        public BookDetail()
+        public AddedBook()
         {
         }
 
-        public int? ID { get; set; } // Primary key property
         public String NAME { get; set; }
         public int ON_SALE { get; set; }
         public float PRICE { get; set; }
         public float DISCOUNT { get; set; }
         public String DESCRIPTION { get; set; }
         public String COVER_URL { get; set; }
-        public String CATEGORY { get; set; }
+        public int CATEGORY_ID { get; set; }
         public DateTime PUBLISH_DATE { get; set; }
-        public String? AUTHORS { get; set; }
-    }
+        public List<int> AUTHORS_ID { get; set; }
+        }
 }

@@ -14,6 +14,6 @@ namespace bookshop.DataAccessLayer.Models
         }
         public int ID { get; set; } // Primary key property
         public String NAME { get; set; }
-        public String BIOGRAPHY { get; set; }
+        public String? BIOGRAPHY { get; set; }
     }
 }

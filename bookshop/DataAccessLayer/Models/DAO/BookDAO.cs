@@ -19,85 +19,59 @@ namespace bookshop.DataAccessLayer.Models.DAO
         {
             this.connection = connection;
         }
-        //public async Task<bool> AddBook(Book book)
-        //{
-        //    using (var conn = connection.con)
-        //    {
-        //        //Get next value in sequence
-        //        if(book.ID == null)
-        //        {
-        //            String nextVal = conn.Query("SELECT bookshop_book_seq.NEXTVAL FROM dual;").ToString();
-        //            try{
-        //                book.ID = Convert.ToInt32(nextVal);
-        //            }
-        //            catch(Exception e)
-        //            {
-        //                Console.WriteLine("Can not convert Sequence Value to Int");
-        //            }
-        //        }
-
-        //        String cmd = "INSERT INTO BOOK ";
-        //        String attributes = "";
-        //        String values = "";
-
-        //        //Generate query String
-        //        foreach (PropertyInfo i in book.GetType().GetProperties())
-        //        {
-        //            attributes += i.Name + ","; //Get the name of attribute
-        //            values += i.GetValue(book) + ","; //Get value of the attribute in book
-        //        }
-        //        if (attributes.Length > 0)
-        //        {
-        //            attributes = attributes.Substring(0, attributes.Length - 2);
-        //        }
-        //        if (values.Length > 0)
-        //        {
-        //            values = values.Substring(0, values.Length - 2);
-        //        }
-
-        //        cmd = cmd + "(" + attributes + ")" + "VALUES" + "(" + values + ")";
-        //        Console.WriteLine(cmd);
-
-        //        bool result = true;
-        //        try
-        //        {
-        //            await conn.QueryAsync<Book>(cmd);
-        //        }
-        //        catch (Exception e) {
-        //            Console.WriteLine("Can not Save book");
-        //            result = false;
-        //        }
-        //        return result;
-
-        //    }
-        //}
-
-        public async Task<bool> Add(Book book)
+        public async Task<bool> Add(AddedBook book)
         {
             using (var conn = connection.con)
             {
-                var parameters = new DynamicParameters();
-                parameters.Add("p_name", book.NAME);
-                parameters.Add("p_numPage", book.NUMBER_OF_PAGE);
-                parameters.Add("p_onSale", book.ON_SALE);
-                parameters.Add("p_price", book.PRICE);
-                parameters.Add("p_discount", book.DISCOUNT);
-                parameters.Add("p_description", book.DESCRIPTION);
-                parameters.Add("p_coverURL", book.COVER_URL);
-                parameters.Add("p_category", book.CATEGORY_ID);
-                parameters.Add("p_publishDate", book.PUBLISH_DATE);
-                parameters.Add("p_result", dbType: DbType.Int64, direction: ParameterDirection.Output);
-
+               
                 bool result = true;
+                conn.BeginTransaction();
                 try
                 {
+                    var bookParameters = new DynamicParameters();
+                    bookParameters.Add("p_name", book.NAME);
+                    bookParameters.Add("p_onSale", book.ON_SALE);
+                    bookParameters.Add("p_price", book.PRICE);
+                    bookParameters.Add("p_discount", book.DISCOUNT);
+                    bookParameters.Add("p_description", book.DESCRIPTION);
+                    bookParameters.Add("p_coverURL", book.COVER_URL);
+                    bookParameters.Add("p_category", book.CATEGORY_ID);
+                    bookParameters.Add("p_publishDate", book.PUBLISH_DATE);
+                    bookParameters.Add("p_result", dbType: DbType.Int64, direction: ParameterDirection.Output);
+
                     await conn.ExecuteReaderAsync(
                         "vietincap_code.ADD_BOOK",
-                        parameters,
+                        bookParameters,
                         commandType: System.Data.CommandType.StoredProcedure
                     );
+
+                    if (bookParameters.Get<Int64>("p_result") == 0)
+                    {
+                        Console.WriteLine("Cannot add book");
+                        return false;
+                    }
+
+                    foreach (var authorId in book.AUTHORS_ID)
+                    {
+                        var composeParamenters = new DynamicParameters();
+                        composeParamenters.Add("p_bookId", bookParameters.Get<Int64>("p_result"));
+                        composeParamenters.Add("p_authorId", authorId);
+                        composeParamenters.Add("p_result", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                        await conn.ExecuteReaderAsync(
+                            "vietincap_code.ADD_COMPOSE",
+                            composeParamenters,
+                            commandType: System.Data.CommandType.StoredProcedure
+                        );
+                        if (composeParamenters.Get<Int64>("p_result") == 0)
+                        {
+                            Console.WriteLine("Cannot add compose");
+                            return false;
+                        }
+                    }
+                    conn.Commit();
                 }
                 catch (Exception ex) {
+                    conn.Rollback();
                     Console.WriteLine("Cannot add book");
                     result = false;
                 }
@@ -107,17 +81,21 @@ namespace bookshop.DataAccessLayer.Models.DAO
             
         }
 
-        public async Task<List<BookListData>> GetAll()
+        public async Task<List<BookListData>> FindBookByName(string name, int page)
         {
             using (var conn = connection.con)
             {
-                var cmd = "SELECT " +
-                    "b.ID,b.NAME, c.NAME AS CATEGORY, b.ON_SALE, b.PRICE" +
-                    " FROM BOOKSHOP_BOOK b INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID";
+                var cmd = @"SELECT 
+                    b.ID,b.NAME, c.NAME AS CATEGORY, b.ON_SALE, b.PRICE, b.DISCOUNT 
+                    FROM BOOKSHOP_BOOK b INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID 
+                    WHERE b.NAME LIKE  :name 
+                    ORDER BY b.ID ASC 
+                    OFFSET :offset ROWS FETCH NEXT 2 ROWS ONLY 
+                    ";
                 List<BookListData> result = null;
                 try
                 {
-                    result = (await connection.con.QueryAsync<BookListData>(cmd)).ToList();
+                    result = (await connection.con.QueryAsync<BookListData>(cmd, new {name = "%" + name + "%", offset = (page-1)*2})).ToList();
                 }
                 catch (Exception ex)
                 {
@@ -133,7 +111,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
             {
 
                 String cmd = "SELECT " +
-                    "b.ID, b.NAME, b.NUMBER_OF_PAGE, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, " +
+                    "b.ID, b.NAME, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, " +
                     "c.NAME AS CATEGORY, " +
                     "b.PUBLISH_DATE, " +
                     "LISTAGG(a.NAME, ', ') WITHIN GROUP (ORDER BY a.NAME) AS AUTHORS " +
@@ -142,7 +120,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
                     "LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID " +
                     "LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID " +
                     "WHERE b.ID = :id " +
-                    "GROUP BY b.ID, b.NAME, b.NUMBER_OF_PAGE, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, c.NAME, b.PUBLISH_DATE";
+                    "GROUP BY b.ID, b.NAME, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, c.NAME, b.PUBLISH_DATE";
                 //thừa dấu chấm phẩy ở cuối câu lệnh SQL
 
                 BookDetail result = null;
@@ -163,10 +141,11 @@ namespace bookshop.DataAccessLayer.Models.DAO
         {
             using (var conn = connection.con)
             {
-                String cmd = "UPDATE BOOK SET " +
-                    "NAME = :name, DESCRIPTION = :des, ON_SALE = :onsale, PRICE = :price, DISCOUNT = :discount" +
+                String cmd = "UPDATE BOOKSHOP_BOOK SET " +
+                    "NAME = :name, DESCRIPTION = :des, ON_SALE = :onsale, PRICE = :price, DISCOUNT = :discount " +
                     "WHERE ID = :id";
                 bool result = false;
+                conn.BeginTransaction();
                 try
                 {
                     var parameters = new
@@ -180,12 +159,14 @@ namespace bookshop.DataAccessLayer.Models.DAO
                     };
 
                     int rowsAffected = await conn.ExecuteAsync(cmd, parameters);
+                    conn.Commit();
                     return rowsAffected > 0; // true nếu có ít nhất 1 row được update
 
                 }
                 catch(Exception e)
                 {
                     Console.WriteLine("Can not update book");
+                    conn.Rollback();
                     return false;
                 }
             }
@@ -195,20 +176,90 @@ namespace bookshop.DataAccessLayer.Models.DAO
         {
             using (var conn = connection.con)
             {
-                String cmd = "DELETE FROM BOOK WHERE ID = :id";
+                String cmd = "DELETE FROM BOOKSHOP_BOOK WHERE ID = :id";
                 bool result = false;
+
+                conn.BeginTransaction();
                 try
                 {
                     int rowsAffected = await conn.ExecuteAsync(cmd, new { id = id });
+                    conn.Commit();
                     return rowsAffected > 0; // true nếu có ít nhất 1 row bị xóa
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("Can not delete book");
+                    conn.Rollback();
                     return false;
                 }
             }
         }
+
+        public async Task<List<BookListData>> CustomSearchBook(SearchBook searchBook)
+        {
+            using(var conn = connection.con)
+            {
+                var cmd = @"
+                            SELECT 
+                                b.ID,
+                                b.NAME,
+                                c.NAME AS CATEGORY,
+                                b.ON_SALE,
+                                b.PRICE,
+                                b.DISCOUNT 
+                            FROM BOOKSHOP_BOOK b 
+                            INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID 
+                            LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID
+                            LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID
+                            WHERE ";
+                List<BookListData> result = null;
+
+                List<String> conditions = new List<string>();
+                if (searchBook.min_Price != null)
+                {
+                    conditions.Add("b.PRICE BETWEEN " + searchBook.min_Price + " AND " + searchBook.max_Price);
+                }
+                if (searchBook.id != -1)
+                {
+                    conditions.Add("b.ID = " + searchBook.id);
+                }
+                if (searchBook.name != null && searchBook.name.Trim() != "")
+                {
+                    conditions.Add("b.NAME LIKE '%" + searchBook.name.Trim() + "%'");
+                }
+                if (searchBook.author_Name != null && searchBook.author_Name.Trim() != "")
+                {
+                    conditions.Add("a.NAME LIKE '%" + searchBook.author_Name.Trim() + "%'");
+                }
+                if (searchBook.category_Id != -1 )
+                {
+                    conditions.Add("b.CATEGORY_ID = " + searchBook.category_Id);
+                }
+                if(searchBook.on_Sale != -1)
+                {
+                    conditions.Add("b.ON_SALE = " + searchBook.on_Sale);
+                }
+                if (searchBook.discount != 0)
+                {
+                    conditions.Add("b.DISCOUNT >= " + searchBook.discount);
+                }
+                cmd += String.Join(" AND ", conditions);
+                Console.WriteLine("SQL command: " + cmd);
+                try
+                {
+                    result = (await connection.con.QueryAsync<BookListData>(cmd)).ToList();
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Can not Query book with custom search");
+                    return null;
+                }
+
+
+            }
+        }
+
     }
 
     

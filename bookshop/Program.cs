@@ -75,15 +75,15 @@ namespace bookshop
             builder.Services.AddScoped<CategoryDAO>();
 
 
-            // //Use DB Context
-            //builder.Services.AddDbContext<BookShopContext>(opt =>opt.UseOracle(builder.Configuration.GetConnectionString("bookshopContext")));
+            //Use DB Context
+            builder.Services.AddDbContext<BookShopContext>(opt =>opt.UseOracle(builder.Configuration.GetConnectionString("bookshopContext")));
 
-            //Use In Memory Database
-            builder.Services.AddDbContext<BookShopContext>(opt =>
-            {
-                opt.UseInMemoryDatabase("BookShopTempDB");
-                opt.EnableSensitiveDataLogging(); // Add this line
-            });
+            ////Use In Memory Database
+            //builder.Services.AddDbContext<BookShopContext>(opt =>
+            //{
+            //    opt.UseInMemoryDatabase("BookShopTempDB");
+            //    opt.EnableSensitiveDataLogging(); // Add this line
+            //});
 
 
             var app = builder.Build();

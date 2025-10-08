@@ -24,5 +24,11 @@ namespace bookshop.Controllers
             return await categoryDAO.GetOneCategory(id);
         }
 
+        [HttpGet("/getallcategory")]
+        public async Task<List<Category>> GetAllCategory()
+        {
+            return await categoryDAO.GetAll();
+        }
+
     }
 }
