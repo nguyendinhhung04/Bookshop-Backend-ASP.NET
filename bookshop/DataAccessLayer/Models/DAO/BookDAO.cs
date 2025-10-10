@@ -14,6 +14,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
     public class BookDAO : IDAO
     {
         private readonly DBConnection connection;
+        private readonly int pageSize = 8;
 
         public BookDAO(DBConnection connection)
         {
@@ -90,12 +91,12 @@ namespace bookshop.DataAccessLayer.Models.DAO
                     FROM BOOKSHOP_BOOK b INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID 
                     WHERE b.NAME LIKE  :name 
                     ORDER BY b.ID ASC 
-                    OFFSET :offset ROWS FETCH NEXT 2 ROWS ONLY 
+                    OFFSET :offset ROWS FETCH NEXT 8 ROWS ONLY 
                     ";
                 List<BookListData> result = null;
                 try
                 {
-                    result = (await connection.con.QueryAsync<BookListData>(cmd, new {name = "%" + name + "%", offset = (page-1)*2})).ToList();
+                    result = (await connection.con.QueryAsync<BookListData>(cmd, new {name = "%" + name + "%", offset = (page-1)* pageSize })).ToList();
                 }
                 catch (Exception ex)
                 {
@@ -195,12 +196,12 @@ namespace bookshop.DataAccessLayer.Models.DAO
             }
         }
 
-        public async Task<List<BookListData>> CustomSearchBook(SearchBook searchBook)
+        public async Task<List<BookListData>> CustomSearchBook(SearchBook searchBook, int page)
         {
             using(var conn = connection.con)
             {
                 var cmd = @"
-                            SELECT 
+                            SELECT DISTINCT
                                 b.ID,
                                 b.NAME,
                                 c.NAME AS CATEGORY,
@@ -243,11 +244,15 @@ namespace bookshop.DataAccessLayer.Models.DAO
                 {
                     conditions.Add("b.DISCOUNT >= " + searchBook.discount);
                 }
+
                 cmd += String.Join(" AND ", conditions);
+                cmd += " ORDER BY b.ID ASC ";
+                cmd += "OFFSET :offset ROWS FETCH NEXT 8 ROWS ONLY";
+
                 Console.WriteLine("SQL command: " + cmd);
                 try
                 {
-                    result = (await connection.con.QueryAsync<BookListData>(cmd)).ToList();
+                    result = (await connection.con.QueryAsync<BookListData>(cmd, new {offset = (page - 1) * pageSize })).ToList();
                     return result;
                 }
                 catch (Exception ex)

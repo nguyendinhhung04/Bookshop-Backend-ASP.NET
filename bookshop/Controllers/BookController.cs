@@ -89,13 +89,13 @@ namespace bookshop.Controllers
 
         [HttpPost("/customSearch")]
         [EnableCors("MyAllowSpecificOrigins")]
-        public async Task<List<BookListData>> CustomSearch([FromBody] SearchBook searchBook)
+        public async Task<List<BookListData>> CustomSearch([FromBody] SearchBook searchBook, [FromQuery] int page)
         {
             if (searchBook == null)
             {
                 return null;
             }
-            var result = await bookDAO.CustomSearchBook(searchBook);
+            var result = await bookDAO.CustomSearchBook(searchBook, page);
             return result;
         }
 
