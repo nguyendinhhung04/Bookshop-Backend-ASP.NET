@@ -198,6 +198,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
 
         public async Task<List<BookListData>> CustomSearchBook(SearchBook searchBook, int page)
         {
+            
             using(var conn = connection.con)
             {
                 var cmd = @"
@@ -216,6 +217,11 @@ namespace bookshop.DataAccessLayer.Models.DAO
                 List<BookListData> result = null;
 
                 List<String> conditions = new List<string>();
+                conditions.Add(" 1=1 ");
+                if (searchBook==null)
+                {
+                    return null;
+                }
                 if (searchBook.min_Price != null)
                 {
                     conditions.Add("b.PRICE BETWEEN " + searchBook.min_Price + " AND " + searchBook.max_Price);
