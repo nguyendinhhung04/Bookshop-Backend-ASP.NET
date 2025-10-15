@@ -82,21 +82,62 @@ namespace bookshop.DataAccessLayer.Models.DAO
             
         }
 
-        public async Task<List<BookListData>> FindBookByName(string name, int page)
+        //public async Task<List<BookListData>> FindBookByName(string name, int page)
+        //{
+        //    using (var conn = connection.con)
+        //    {
+        //        var cmd = @"SELECT 
+        //            b.ID,b.NAME, c.NAME AS CATEGORY, b.ON_SALE, b.PRICE, b.DISCOUNT 
+        //            FROM BOOKSHOP_BOOK b INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID 
+        //            WHERE b.NAME LIKE  :name 
+        //            ORDER BY b.ID ASC 
+        //            OFFSET :offset ROWS FETCH NEXT 8 ROWS ONLY 
+        //            ";
+        //        List<BookListData> result = null;
+        //        try
+        //        {
+        //            result = (await connection.con.QueryAsync<BookListData>(cmd, new {name = "%" + name + "%", offset = (page-1)* pageSize })).ToList();
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Console.WriteLine("Can not Query all book");
+        //        }
+        //        return result;
+        //    }
+        //}
+
+        public async Task<List<BookDetail>> FindBookByName(string name, int page)
         {
             using (var conn = connection.con)
             {
-                var cmd = @"SELECT 
-                    b.ID,b.NAME, c.NAME AS CATEGORY, b.ON_SALE, b.PRICE, b.DISCOUNT 
-                    FROM BOOKSHOP_BOOK b INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID 
-                    WHERE b.NAME LIKE  :name 
-                    ORDER BY b.ID ASC 
-                    OFFSET :offset ROWS FETCH NEXT 8 ROWS ONLY 
-                    ";
-                List<BookListData> result = null;
+                string cmd = @"
+                                SELECT 
+                                    b.ID, 
+                                    b.NAME, 
+                                    b.ON_SALE, 
+                                    b.PRICE, 
+                                    b.DISCOUNT, 
+                                    b.DESCRIPTION, 
+                                    b.COVER_URL, 
+                                    c.NAME AS CATEGORY, 
+                                    b.PUBLISH_DATE, 
+                                    LISTAGG(a.NAME, ', ') WITHIN GROUP (ORDER BY a.NAME) AS AUTHORS
+                                FROM BOOKSHOP_BOOK b
+                                INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID
+                                LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID
+                                LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID
+                                WHERE b.NAME LIKE :name
+                                GROUP BY 
+                                    b.ID, b.NAME, b.ON_SALE, b.PRICE, b.DISCOUNT, 
+                                    b.DESCRIPTION, b.COVER_URL, c.NAME, b.PUBLISH_DATE
+                                ORDER BY b.ID ASC
+                                OFFSET :offset ROWS FETCH NEXT 8 ROWS ONLY
+                                ";
+
+                List<BookDetail> result = null;
                 try
                 {
-                    result = (await connection.con.QueryAsync<BookListData>(cmd, new {name = "%" + name + "%", offset = (page-1)* pageSize })).ToList();
+                    result = (await connection.con.QueryAsync<BookDetail>(cmd, new { name = "%" + name + "%", offset = (page - 1) * pageSize })).ToList();
                 }
                 catch (Exception ex)
                 {
@@ -105,6 +146,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
                 return result;
             }
         }
+
 
         public async Task<BookDetail> GetOneBook(int id)
         {
@@ -266,10 +308,80 @@ namespace bookshop.DataAccessLayer.Models.DAO
                     Console.WriteLine("Can not Query book with custom search");
                     return null;
                 }
-
-
             }
         }
+
+        //public Task<List<BookDetail>> GetXlsx(SearchBook searchBook)
+        //{
+        //    using (var conn = connection.con)
+        //    {
+        //        var cmd = @"
+        //                    SELECT DISTINCT
+        //                        b.ID,
+        //                        b.NAME,
+        //                        c.NAME AS CATEGORY,
+        //                        b.ON_SALE,
+        //                        b.PRICE,
+        //                        b.DISCOUNT 
+        //                    FROM BOOKSHOP_BOOK b 
+        //                    INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID 
+        //                    LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID
+        //                    LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID
+        //                    WHERE ";
+        //        Task<List<BookDetail>> result = null;
+
+        //        List<String> conditions = new List<string>();
+        //        conditions.Add(" 1=1 ");
+        //        if (searchBook == null)
+        //        {
+        //            return null;
+        //        }
+        //        if (searchBook.min_Price != null)
+        //        {
+        //            conditions.Add("b.PRICE BETWEEN " + searchBook.min_Price + " AND " + searchBook.max_Price);
+        //        }
+        //        if (searchBook.id != -1)
+        //        {
+        //            conditions.Add("b.ID = " + searchBook.id);
+        //        }
+        //        if (searchBook.name != null && searchBook.name.Trim() != "")
+        //        {
+        //            conditions.Add("b.NAME LIKE '%" + searchBook.name.Trim() + "%'");
+        //        }
+        //        if (searchBook.author_Name != null && searchBook.author_Name.Trim() != "")
+        //        {
+        //            conditions.Add("a.NAME LIKE '%" + searchBook.author_Name.Trim() + "%'");
+        //        }
+        //        if (searchBook.category_Id != -1)
+        //        {
+        //            conditions.Add("b.CATEGORY_ID = " + searchBook.category_Id);
+        //        }
+        //        if (searchBook.on_Sale != -1)
+        //        {
+        //            conditions.Add("b.ON_SALE = " + searchBook.on_Sale);
+        //        }
+        //        if (searchBook.discount != 0)
+        //        {
+        //            conditions.Add("b.DISCOUNT >= " + searchBook.discount);
+        //        }
+
+        //        cmd += String.Join(" AND ", conditions);
+        //        cmd += " ORDER BY b.ID ASC ";
+
+
+        //        Console.WriteLine("SQL command: " + cmd);
+        //        try
+        //        {
+        //            result = (await conn.QueryAsync<BookDetail>(cmd, new {  })).ToList();
+        //            return result;
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Console.WriteLine("Can not Query book with custom search");
+        //            return null;
+        //        }
+        //    }
+        //}
 
     }
 

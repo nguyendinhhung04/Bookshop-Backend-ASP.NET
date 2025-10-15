@@ -27,7 +27,7 @@ namespace bookshop.Controllers
 
         [HttpGet("/getallbooks/")]
         [EnableCors("MyAllowSpecificOrigins")]
-        public async Task<List<BookListData>> GetAllBooks([FromQuery] String? name, [FromQuery] int page)
+        public async Task<List<BookDetail>> GetAllBooks([FromQuery] String? name, [FromQuery] int page)
         {
             return await bookDAO.FindBookByName(name, page);
         }
@@ -97,6 +97,16 @@ namespace bookshop.Controllers
             }
             var result = await bookDAO.CustomSearchBook(searchBook, page);
             return result;
+        }
+
+        [HttpPost("/getxlsx")]
+        //public async IActionResult GetXlsx([FromBody] SearchBook searchBook)
+        //{
+        //    return Ok(  );
+        //}
+        public async void GetXlsx([FromBody] SearchBook searchBook)
+        {
+            
         }
 
     }
