@@ -244,18 +244,24 @@ namespace bookshop.DataAccessLayer.Models.DAO
             using(var conn = connection.con)
             {
                 var cmd = @"
-                            SELECT DISTINCT
-                                b.ID,
-                                b.NAME,
-                                c.NAME AS CATEGORY,
-                                b.ON_SALE,
-                                b.PRICE,
-                                b.DISCOUNT 
-                            FROM BOOKSHOP_BOOK b 
-                            INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID 
-                            LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID
-                            LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID
-                            WHERE ";
+                            SELECT 
+                                    b.ID, 
+                                    b.NAME, 
+                                    b.ON_SALE, 
+                                    b.PRICE, 
+                                    b.DISCOUNT, 
+                                    b.DESCRIPTION, 
+                                    b.COVER_URL, 
+                                    c.NAME AS CATEGORY, 
+                                    b.PUBLISH_DATE, 
+                                    LISTAGG(a.NAME, ', ') WITHIN GROUP (ORDER BY a.NAME) AS AUTHORS
+                                FROM BOOKSHOP_BOOK b
+                                INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID
+                                LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID
+                                LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID
+                                WHERE 
+                                
+                                ";
                 List<BookListData> result = null;
 
                 List<String> conditions = new List<string>();
@@ -294,6 +300,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
                 }
 
                 cmd += String.Join(" AND ", conditions);
+                cmd += " GROUP BY b.ID, b.NAME, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, c.NAME, b.PUBLISH_DATE ";
                 cmd += " ORDER BY b.ID ASC ";
                 cmd += "OFFSET :offset ROWS FETCH NEXT 8 ROWS ONLY";
 
@@ -311,77 +318,82 @@ namespace bookshop.DataAccessLayer.Models.DAO
             }
         }
 
-        //public Task<List<BookDetail>> GetXlsx(SearchBook searchBook)
-        //{
-        //    using (var conn = connection.con)
-        //    {
-        //        var cmd = @"
-        //                    SELECT DISTINCT
-        //                        b.ID,
-        //                        b.NAME,
-        //                        c.NAME AS CATEGORY,
-        //                        b.ON_SALE,
-        //                        b.PRICE,
-        //                        b.DISCOUNT 
-        //                    FROM BOOKSHOP_BOOK b 
-        //                    INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID 
-        //                    LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID
-        //                    LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID
-        //                    WHERE ";
-        //        Task<List<BookDetail>> result = null;
+        public async Task<List<BookDetail>> GetXlsxData(SearchBook searchBook)
+        {
+            using (var conn = connection.con)
+            {
+                var cmd = @"
+                            SELECT 
+                                    b.ID, 
+                                    b.NAME, 
+                                    b.ON_SALE, 
+                                    b.PRICE, 
+                                    b.DISCOUNT, 
+                                    b.DESCRIPTION, 
+                                    b.COVER_URL, 
+                                    c.NAME AS CATEGORY, 
+                                    b.PUBLISH_DATE, 
+                                    LISTAGG(a.NAME, ', ') WITHIN GROUP (ORDER BY a.NAME) AS AUTHORS
+                                FROM BOOKSHOP_BOOK b
+                                INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID
+                                LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID
+                                LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID
+                                WHERE ";
+                List<BookDetail> result = null;
 
-        //        List<String> conditions = new List<string>();
-        //        conditions.Add(" 1=1 ");
-        //        if (searchBook == null)
-        //        {
-        //            return null;
-        //        }
-        //        if (searchBook.min_Price != null)
-        //        {
-        //            conditions.Add("b.PRICE BETWEEN " + searchBook.min_Price + " AND " + searchBook.max_Price);
-        //        }
-        //        if (searchBook.id != -1)
-        //        {
-        //            conditions.Add("b.ID = " + searchBook.id);
-        //        }
-        //        if (searchBook.name != null && searchBook.name.Trim() != "")
-        //        {
-        //            conditions.Add("b.NAME LIKE '%" + searchBook.name.Trim() + "%'");
-        //        }
-        //        if (searchBook.author_Name != null && searchBook.author_Name.Trim() != "")
-        //        {
-        //            conditions.Add("a.NAME LIKE '%" + searchBook.author_Name.Trim() + "%'");
-        //        }
-        //        if (searchBook.category_Id != -1)
-        //        {
-        //            conditions.Add("b.CATEGORY_ID = " + searchBook.category_Id);
-        //        }
-        //        if (searchBook.on_Sale != -1)
-        //        {
-        //            conditions.Add("b.ON_SALE = " + searchBook.on_Sale);
-        //        }
-        //        if (searchBook.discount != 0)
-        //        {
-        //            conditions.Add("b.DISCOUNT >= " + searchBook.discount);
-        //        }
+                List<String> conditions = new List<string>();
+                conditions.Add(" 1=1 ");
+                if (searchBook == null)
+                {
+                    return null;
+                }
+                if (searchBook.min_Price != null)
+                {
+                    conditions.Add("b.PRICE BETWEEN " + searchBook.min_Price + " AND " + searchBook.max_Price);
+                }
+                if (searchBook.id != -1)
+                {
+                    conditions.Add("b.ID = " + searchBook.id);
+                }
+                if (searchBook.name != null && searchBook.name.Trim() != "")
+                {
+                    conditions.Add("b.NAME LIKE '%" + searchBook.name.Trim() + "%'");
+                }
+                if (searchBook.author_Name != null && searchBook.author_Name.Trim() != "")
+                {
+                    conditions.Add("a.NAME LIKE '%" + searchBook.author_Name.Trim() + "%'");
+                }
+                if (searchBook.category_Id != -1)
+                {
+                    conditions.Add("b.CATEGORY_ID = " + searchBook.category_Id);
+                }
+                if (searchBook.on_Sale != -1)
+                {
+                    conditions.Add("b.ON_SALE = " + searchBook.on_Sale);
+                }
+                if (searchBook.discount != 0)
+                {
+                    conditions.Add("b.DISCOUNT >= " + searchBook.discount);
+                }
 
-        //        cmd += String.Join(" AND ", conditions);
-        //        cmd += " ORDER BY b.ID ASC ";
+                cmd += String.Join(" AND ", conditions);
+                cmd += " GROUP BY b.ID, b.NAME, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, c.NAME, b.PUBLISH_DATE ";
+                cmd += " ORDER BY b.ID ASC ";
 
 
-        //        Console.WriteLine("SQL command: " + cmd);
-        //        try
-        //        {
-        //            result = (await conn.QueryAsync<BookDetail>(cmd, new {  })).ToList();
-        //            return result;
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            Console.WriteLine("Can not Query book with custom search");
-        //            return null;
-        //        }
-        //    }
-        //}
+                Console.WriteLine("SQL command: " + cmd);
+                try
+                {
+                    result = (await connection.con.QueryAsync<BookDetail>(cmd)).ToList();
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Can not Query book with custom search");
+                    return null;
+                }
+            }
+        }
 
     }
 

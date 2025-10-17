@@ -5,6 +5,8 @@ using bookshop.DataAccessLayer.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using MiniExcelLibs;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace bookshop.Controllers
 {
@@ -100,14 +102,19 @@ namespace bookshop.Controllers
         }
 
         [HttpPost("/getxlsx")]
-        //public async IActionResult GetXlsx([FromBody] SearchBook searchBook)
-        //{
-        //    return Ok(  );
-        //}
-        public async void GetXlsx([FromBody] SearchBook searchBook)
+        public async Task<IActionResult> GetXlsx([FromBody] SearchBook searchBook)
         {
-            
-        }
+            List<BookDetail> data = await bookDAO.GetXlsxData(searchBook);
 
+            var stream = new MemoryStream();
+            MiniExcel.SaveAs(stream, data);
+            stream.Seek(0, SeekOrigin.Begin);
+
+            return File(
+                stream.ToArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Books.xlsx"
+            );
+        }
     }
 }
