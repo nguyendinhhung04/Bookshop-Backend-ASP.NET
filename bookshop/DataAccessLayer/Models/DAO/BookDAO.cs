@@ -38,7 +38,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
                     bookParameters.Add("p_coverURL", book.COVER_URL);
                     bookParameters.Add("p_category", book.CATEGORY_ID);
                     bookParameters.Add("p_publishDate", book.PUBLISH_DATE);
-                    bookParameters.Add("p_result", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                    bookParameters.Add("p_result", dbType: DbType.Int64, direction: ParameterDirection.Output); //Dùng output này 
 
                     await conn.ExecuteReaderAsync(
                         "vietincap_code.ADD_BOOK",
@@ -134,7 +134,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
                                 OFFSET :offset ROWS FETCH NEXT 8 ROWS ONLY
                                 ";
 
-                List<BookDetail> result = null;
+                List<BookDetail> result = new List<BookDetail>();
                 try
                 {
                     result = (await connection.con.QueryAsync<BookDetail>(cmd, new { name = "%" + name + "%", offset = (page - 1) * pageSize })).ToList();
@@ -262,7 +262,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
                                 WHERE 
                                 
                                 ";
-                List<BookListData> result = null;
+                List<BookListData> result = new List<BookListData>();
 
                 List<String> conditions = new List<string>();
                 conditions.Add(" 1=1 ");
@@ -339,7 +339,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
                                 LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID
                                 LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID
                                 WHERE ";
-                List<BookDetail> result = null;
+                List<BookDetail> result = new List<BookDetail>();
 
                 List<String> conditions = new List<string>();
                 conditions.Add(" 1=1 ");

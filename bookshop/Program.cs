@@ -78,37 +78,7 @@ namespace bookshop
             //Use DB Context
             builder.Services.AddDbContext<BookShopContext>(opt =>opt.UseOracle(builder.Configuration.GetConnectionString("bookshopContext")));
 
-            ////Use In Memory Database
-            //builder.Services.AddDbContext<BookShopContext>(opt =>
-            //{
-            //    opt.UseInMemoryDatabase("BookShopTempDB");
-            //    opt.EnableSensitiveDataLogging(); // Add this line
-            //});
-
-
             var app = builder.Build();
-            //using (var scope = app.Services.CreateScope())
-            //{
-            //    var db = scope.ServiceProvider.GetRequiredService<BookShopContext>();
-
-            //    if (!db.Category.Any())
-            //    {
-            //        db.Category.AddRangeAsync(
-            //            GenerateInMemoryDB.Books
-            //            );
-
-            //        db.SaveChanges();
-            //    }
-
-            //    if (!db.Book.Any())
-            //    {
-            //        db.Book.AddRangeAsync(
-                       
-            //            );
-
-            //        db.SaveChanges();
-            //    }
-            //}
 
 
 
