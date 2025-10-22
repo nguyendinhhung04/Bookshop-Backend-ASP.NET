@@ -44,7 +44,7 @@ namespace bookshop.Controllers
 
         [HttpPost("/addbook")]
         [EnableCors("MyAllowSpecificOrigins")]
-        public async Task<bool>? AddBook([FromBody] AddedBook book)
+        public async Task<int>? AddBook([FromBody] AddedBook book)
         {
 
             //handle error , use try catch

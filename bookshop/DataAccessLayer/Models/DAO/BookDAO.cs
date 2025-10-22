@@ -20,64 +20,83 @@ namespace bookshop.DataAccessLayer.Models.DAO
         {
             this.connection = connection;
         }
-        public async Task<bool> Add(AddedBook book)
+        public async Task<int> Add(AddedBook book)
         {
-            using (var conn = connection.con)
+
+            if (book.NAME.Trim() == "")
             {
-               
-                bool result = true;
-                conn.BeginTransaction();
-                try
+                return -1;
+            }
+            if (book.PRICE < 0 || book.DISCOUNT < 0 || book.DISCOUNT > 100)
+            {
+                return -1;
+            }
+            if(book.AUTHORS_ID == null || book.AUTHORS_ID.Count == 0)
+            {
+                return -1;
+            }
+            if (book.CATEGORY_ID <= 0)
+            {
+                return -1;
+            }
+
+                using (var conn = connection.con)
                 {
-                    var bookParameters = new DynamicParameters();
-                    bookParameters.Add("p_name", book.NAME);
-                    bookParameters.Add("p_onSale", book.ON_SALE);
-                    bookParameters.Add("p_price", book.PRICE);
-                    bookParameters.Add("p_discount", book.DISCOUNT);
-                    bookParameters.Add("p_description", book.DESCRIPTION);
-                    bookParameters.Add("p_coverURL", book.COVER_URL);
-                    bookParameters.Add("p_category", book.CATEGORY_ID);
-                    bookParameters.Add("p_publishDate", book.PUBLISH_DATE);
-                    bookParameters.Add("p_result", dbType: DbType.Int64, direction: ParameterDirection.Output); //Dùng output này 
 
-                    await conn.ExecuteReaderAsync(
-                        "vietincap_code.ADD_BOOK",
-                        bookParameters,
-                        commandType: System.Data.CommandType.StoredProcedure
-                    );
-
-                    if (bookParameters.Get<Int64>("p_result") == 0)
+                    int bookId = -1;
+                    conn.BeginTransaction();
+                    try
                     {
-                        Console.WriteLine("Cannot add book");
-                        return false;
-                    }
+                        var bookParameters = new DynamicParameters();
+                        bookParameters.Add("p_name", book.NAME);
+                        bookParameters.Add("p_onSale", book.ON_SALE);
+                        bookParameters.Add("p_price", book.PRICE);
+                        bookParameters.Add("p_discount", book.DISCOUNT);
+                        bookParameters.Add("p_description", book.DESCRIPTION);
+                        bookParameters.Add("p_coverURL", book.COVER_URL);
+                        bookParameters.Add("p_category", book.CATEGORY_ID);
+                        bookParameters.Add("p_publishDate", book.PUBLISH_DATE);
+                        bookParameters.Add("p_result", dbType: DbType.Int64, direction: ParameterDirection.Output); //Dùng output này 
 
-                    foreach (var authorId in book.AUTHORS_ID)
-                    {
-                        var composeParamenters = new DynamicParameters();
-                        composeParamenters.Add("p_bookId", bookParameters.Get<Int64>("p_result"));
-                        composeParamenters.Add("p_authorId", authorId);
-                        composeParamenters.Add("p_result", dbType: DbType.Int64, direction: ParameterDirection.Output);
                         await conn.ExecuteReaderAsync(
-                            "vietincap_code.ADD_COMPOSE",
-                            composeParamenters,
+                            "vietincap_code.ADD_BOOK",
+                            bookParameters,
                             commandType: System.Data.CommandType.StoredProcedure
                         );
-                        if (composeParamenters.Get<Int64>("p_result") == 0)
+                        bookId = (int)bookParameters.Get<Int64>("p_result");
+                        if ((bookId) == 0)
                         {
-                            Console.WriteLine("Cannot add compose");
-                            return false;
+                            Console.WriteLine("Cannot add book");
+                            return -1;
                         }
+
+                        foreach (var authorId in book.AUTHORS_ID)
+                        {
+                            var composeParamenters = new DynamicParameters();
+                            composeParamenters.Add("p_bookId", bookParameters.Get<Int64>("p_result"));
+                            composeParamenters.Add("p_authorId", authorId);
+                            composeParamenters.Add("p_result", dbType: DbType.Int64, direction: ParameterDirection.Output);
+                            await conn.ExecuteReaderAsync(
+                                "vietincap_code.ADD_COMPOSE",
+                                composeParamenters,
+                                commandType: System.Data.CommandType.StoredProcedure
+                            );
+                            if (composeParamenters.Get<Int64>("p_result") == 0)
+                            {
+                                Console.WriteLine("Cannot add compose");
+                                return -1;
+                            }
+                        }
+                        conn.Commit();
                     }
-                    conn.Commit();
+                    catch (Exception ex)
+                    {
+                        conn.Rollback();
+                        Console.WriteLine("Cannot add book");
+                        bookId = -1;
+                    }
+                    return bookId;
                 }
-                catch (Exception ex) {
-                    conn.Rollback();
-                    Console.WriteLine("Cannot add book");
-                    result = false;
-                }
-                return result;
-            }
 
             
         }
@@ -272,7 +291,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
                 }
                 if (searchBook.min_Price != null)
                 {
-                    conditions.Add("b.PRICE BETWEEN " + searchBook.min_Price + " AND " + searchBook.max_Price);
+                    conditions.Add(" (b.PRICE * (1 - b.DISCOUNT / 100.0)) BETWEEN " + searchBook.min_Price + " AND " + searchBook.max_Price);
                 }
                 if (searchBook.id != -1)
                 {
@@ -293,10 +312,6 @@ namespace bookshop.DataAccessLayer.Models.DAO
                 if(searchBook.on_Sale != -1)
                 {
                     conditions.Add("b.ON_SALE = " + searchBook.on_Sale);
-                }
-                if (searchBook.discount != 0)
-                {
-                    conditions.Add("b.DISCOUNT >= " + searchBook.discount);
                 }
 
                 cmd += String.Join(" AND ", conditions);
@@ -349,7 +364,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
                 }
                 if (searchBook.min_Price != null)
                 {
-                    conditions.Add("b.PRICE BETWEEN " + searchBook.min_Price + " AND " + searchBook.max_Price);
+                    conditions.Add(" (b.PRICE * (1 - b.DISCOUNT / 100.0)) BETWEEN " + searchBook.min_Price + " AND " + searchBook.max_Price);
                 }
                 if (searchBook.id != -1)
                 {
@@ -370,10 +385,6 @@ namespace bookshop.DataAccessLayer.Models.DAO
                 if (searchBook.on_Sale != -1)
                 {
                     conditions.Add("b.ON_SALE = " + searchBook.on_Sale);
-                }
-                if (searchBook.discount != 0)
-                {
-                    conditions.Add("b.DISCOUNT >= " + searchBook.discount);
                 }
 
                 cmd += String.Join(" AND ", conditions);

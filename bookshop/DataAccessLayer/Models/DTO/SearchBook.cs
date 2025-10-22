@@ -9,8 +9,6 @@
         public int on_Sale { get; set; }
         public float min_Price { get; set; }
         public float max_Price { get; set; }
-        public float discount { get; set; }
-
         public SearchBook() 
         {
         }
@@ -23,8 +21,6 @@
             this.author_Name = author_Name;
             this.on_Sale = on_Sale;
             this.min_Price = min_Price;
-            this.max_Price = max_Price;
-            this.discount = discount;
-        }
+            this.max_Price = max_Price;        }
     }
 }
