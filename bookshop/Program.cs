@@ -76,7 +76,7 @@ namespace bookshop
 
 
             //Use DB Context
-            //builder.Services.AddDbContext<BookShopContext>(opt =>opt.UseOracle(builder.Configuration.GetConnectionString("bookshopContext")));
+            builder.Services.AddDbContext<BookShopContext>(opt =>opt.UseOracle(builder.Configuration.GetConnectionString("bookshopContext")));
 
             var app = builder.Build();
 

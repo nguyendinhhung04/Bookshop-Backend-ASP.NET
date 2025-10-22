@@ -101,30 +101,6 @@ namespace bookshop.DataAccessLayer.Models.DAO
             
         }
 
-        //public async Task<List<BookListData>> FindBookByName(string name, int page)
-        //{
-        //    using (var conn = connection.con)
-        //    {
-        //        var cmd = @"SELECT 
-        //            b.ID,b.NAME, c.NAME AS CATEGORY, b.ON_SALE, b.PRICE, b.DISCOUNT 
-        //            FROM BOOKSHOP_BOOK b INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID 
-        //            WHERE b.NAME LIKE  :name 
-        //            ORDER BY b.ID ASC 
-        //            OFFSET :offset ROWS FETCH NEXT 8 ROWS ONLY 
-        //            ";
-        //        List<BookListData> result = null;
-        //        try
-        //        {
-        //            result = (await connection.con.QueryAsync<BookListData>(cmd, new {name = "%" + name + "%", offset = (page-1)* pageSize })).ToList();
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            Console.WriteLine("Can not Query all book");
-        //        }
-        //        return result;
-        //    }
-        //}
-
         public async Task<List<BookDetail>> FindBookByName(string name, int page)
         {
             using (var conn = connection.con)
@@ -138,17 +114,17 @@ namespace bookshop.DataAccessLayer.Models.DAO
                                     b.DISCOUNT, 
                                     b.DESCRIPTION, 
                                     b.COVER_URL, 
-                                    c.NAME AS CATEGORY, 
+                                    c.VALUE AS CATEGORY, 
                                     b.PUBLISH_DATE, 
                                     LISTAGG(a.NAME, ', ') WITHIN GROUP (ORDER BY a.NAME) AS AUTHORS
                                 FROM BOOKSHOP_BOOK b
-                                INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID
+                                INNER JOIN BOOKSHOP_DEFINE c ON b.CATEGORY_ID = c.ID
                                 LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID
                                 LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID
                                 WHERE b.NAME LIKE :name
                                 GROUP BY 
                                     b.ID, b.NAME, b.ON_SALE, b.PRICE, b.DISCOUNT, 
-                                    b.DESCRIPTION, b.COVER_URL, c.NAME, b.PUBLISH_DATE
+                                    b.DESCRIPTION, b.COVER_URL, c.VALUE, b.PUBLISH_DATE
                                 ORDER BY b.ID ASC
                                 OFFSET :offset ROWS FETCH NEXT 8 ROWS ONLY
                                 ";
@@ -174,15 +150,15 @@ namespace bookshop.DataAccessLayer.Models.DAO
 
                 String cmd = "SELECT " +
                     "b.ID, b.NAME, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, " +
-                    "c.NAME AS CATEGORY, " +
+                    "c.VALUE AS CATEGORY, " +
                     "b.PUBLISH_DATE, " +
                     "LISTAGG(a.NAME, ', ') WITHIN GROUP (ORDER BY a.NAME) AS AUTHORS " +
                     "FROM BOOKSHOP_BOOK b " +
-                    "INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID " +
+                    "INNER JOIN BOOKSHOP_DEFINE c ON b.CATEGORY_ID = c.ID " +
                     "LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID " +
                     "LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID " +
                     "WHERE b.ID = :id " +
-                    "GROUP BY b.ID, b.NAME, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, c.NAME, b.PUBLISH_DATE";
+                    "GROUP BY b.ID, b.NAME, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, c.VALUE, b.PUBLISH_DATE";
                 //thừa dấu chấm phẩy ở cuối câu lệnh SQL
 
                 BookDetail result = null;
@@ -271,11 +247,11 @@ namespace bookshop.DataAccessLayer.Models.DAO
                                     b.DISCOUNT, 
                                     b.DESCRIPTION, 
                                     b.COVER_URL, 
-                                    c.NAME AS CATEGORY, 
+                                    c.VALUE AS CATEGORY, 
                                     b.PUBLISH_DATE, 
                                     LISTAGG(a.NAME, ', ') WITHIN GROUP (ORDER BY a.NAME) AS AUTHORS
                                 FROM BOOKSHOP_BOOK b
-                                INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID
+                                INNER JOIN BOOKSHOP_DEFINE c ON b.CATEGORY_ID = c.ID
                                 LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID
                                 LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID
                                 WHERE 
@@ -315,7 +291,7 @@ namespace bookshop.DataAccessLayer.Models.DAO
                 }
 
                 cmd += String.Join(" AND ", conditions);
-                cmd += " GROUP BY b.ID, b.NAME, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, c.NAME, b.PUBLISH_DATE ";
+                cmd += " GROUP BY b.ID, b.NAME, b.ON_SALE, b.PRICE, b.DISCOUNT, b.DESCRIPTION, b.COVER_URL, c.VALUE, b.PUBLISH_DATE ";
                 cmd += " ORDER BY b.ID ASC ";
                 cmd += "OFFSET :offset ROWS FETCH NEXT 8 ROWS ONLY";
 
@@ -346,11 +322,11 @@ namespace bookshop.DataAccessLayer.Models.DAO
                                     b.DISCOUNT, 
                                     b.DESCRIPTION, 
                                     b.COVER_URL, 
-                                    c.NAME AS CATEGORY, 
+                                    c.VALUE AS CATEGORY, 
                                     b.PUBLISH_DATE, 
                                     LISTAGG(a.NAME, ', ') WITHIN GROUP (ORDER BY a.NAME) AS AUTHORS
                                 FROM BOOKSHOP_BOOK b
-                                INNER JOIN BOOKSHOP_CATEGORY c ON b.CATEGORY_ID = c.ID
+                                INNER JOIN BOOKSHOP_DEFINE c ON b.CATEGORY_ID = c.ID
                                 LEFT JOIN BOOKSHOP_COMPOSE comp ON b.ID = comp.BOOK_ID
                                 LEFT JOIN BOOKSHOP_AUTHOR a ON comp.AUTHOR_ID = a.ID
                                 WHERE ";
